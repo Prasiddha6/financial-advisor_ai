@@ -1,28 +1,38 @@
 import streamlit as st
+import pandas as pd
 
 st.set_page_config(
-    page_title="AI Financial Advisor",
-    page_icon="💰",
+    page_title="Financial Advisor AI",
     layout="wide"
 )
 
-st.title("AI Financial Advisor")
+st.title("Financial Advisor AI")
+st.write("Upload a transaction dataset to generate financial insights.")
 
-st.markdown("""
-## Welcome!
+uploaded_file = st.file_uploader(
+    "Upload CSV",
+    type=["csv"]
+)
 
-This application helps you:
+if uploaded_file is not None:
 
-- Analyze expenses
-- Predict future spending
-- Track savings
-- Get AI-powered financial advice
+    df = pd.read_csv(uploaded_file)
 
-Built using:
+    st.subheader("Transactions")
+    st.dataframe(df, use_container_width=True)
 
-- Streamlit
-- Pandas
-- Plotly
-- Scikit-Learn
-- Google Gemini
-""")
+    income = df.loc[df["Type"] == "Income", "Amount"].sum()
+    expenses = df.loc[df["Type"] == "Expense", "Amount"].sum()
+
+    savings = income - expenses
+
+    savings_rate = 0
+    if income > 0:
+        savings_rate = (savings / income) * 100
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    col1.metric("Total Income", f"₹{income:,.2f}")
+    col2.metric("Total Expenses", f"₹{expenses:,.2f}")
+    col3.metric("Net Savings", f"₹{savings:,.2f}")
+    col4.metric("Savings Rate", f"{savings_rate:.2f}%")
