@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from utils.gemini import GeminiAdvisor
 from utils.predictor import forecast_revenue
 from utils.data_loader import DataLoader
 from utils.analytics import calculate_dataset_metrics
@@ -236,3 +237,55 @@ forecast_chart = (
 )
 
 st.line_chart(forecast_chart)
+st.divider()
+
+st.header("AI Financial Assistant")
+
+question = st.text_area(
+    "Ask a question about the uploaded financial dataset",
+    height=120,
+)
+
+if st.button("Generate Analysis"):
+
+    try:
+
+        advisor = GeminiAdvisor()
+
+        context = f"""
+Dataset Summary
+
+Rows: {metrics['rows']}
+States: {metrics['states']}
+Years: {metrics['years']}
+
+Total Revenue:
+{total_revenue}
+
+Total Expenditure:
+{total_expenditure}
+
+Total Tax:
+{total_tax}
+
+Outstanding Debt:
+{total_debt}
+
+Net Balance:
+{balance}
+
+The user question is:
+
+{question}
+
+Provide a professional financial analysis.
+"""
+
+        answer = advisor.generate_response(context)
+
+        st.subheader("Analysis")
+
+        st.write(answer)
+
+    except Exception as e:
+        st.error(str(e))
