@@ -2,37 +2,44 @@ import streamlit as st
 import pandas as pd
 
 st.set_page_config(
-    page_title="Financial Advisor AI",
-    layout="wide"
+    page_title="Financial Analytics Dashboard",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-st.title("Financial Advisor AI")
-st.write("Upload a transaction dataset to generate financial insights.")
+st.title("Financial Analytics Dashboard")
 
-uploaded_file = st.file_uploader(
-    "Upload CSV",
+st.sidebar.header("Data Source")
+
+uploaded_file = st.sidebar.file_uploader(
+    "Upload Financial Dataset",
     type=["csv"]
 )
 
 if uploaded_file is not None:
+    try:
+        df = pd.read_csv(uploaded_file)
 
-    df = pd.read_csv(uploaded_file)
+        st.success("Dataset loaded successfully.")
 
-    st.subheader("Transactions")
-    st.dataframe(df, use_container_width=True)
+        st.subheader("Dataset Preview")
+        st.dataframe(df, use_container_width=True)
 
-    income = df.loc[df["Type"] == "Income", "Amount"].sum()
-    expenses = df.loc[df["Type"] == "Expense", "Amount"].sum()
+        st.subheader("Dataset Information")
 
-    savings = income - expenses
+        col1, col2, col3 = st.columns(3)
 
-    savings_rate = 0
-    if income > 0:
-        savings_rate = (savings / income) * 100
+        with col1:
+            st.metric("Rows", df.shape[0])
 
-    col1, col2, col3, col4 = st.columns(4)
+        with col2:
+            st.metric("Columns", df.shape[1])
 
-    col1.metric("Total Income", f"₹{income:,.2f}")
-    col2.metric("Total Expenses", f"₹{expenses:,.2f}")
-    col3.metric("Net Savings", f"₹{savings:,.2f}")
-    col4.metric("Savings Rate", f"{savings_rate:.2f}%")
+        with col3:
+            st.metric("Missing Values", df.isnull().sum().sum())
+
+    except Exception as e:
+        st.error(f"Error loading dataset: {e}")
+
+else:
+    st.info("Please upload a CSV file to begin analysis.")
