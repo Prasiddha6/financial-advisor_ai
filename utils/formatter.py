@@ -1,4 +1,3 @@
-from utils.formatter import format_currency
 def format_currency(value):
 
     if abs(value) >= 1_000_000_000:
