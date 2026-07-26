@@ -1,5 +1,16 @@
 import streamlit as st
 import pandas as pd
+def load_css():
+
+    with open("assets/style.css") as css:
+        st.markdown(
+            f"<style>{css.read()}</style>",
+            unsafe_allow_html=True,
+        )
+
+
+load_css()
+from utils.formatter import format_currency
 from utils.gemini import GeminiAdvisor
 from utils.predictor import forecast_revenue
 from utils.data_loader import DataLoader
@@ -157,12 +168,8 @@ with right:
         tax_revenue(filtered_df),
         use_container_width=True,
     )
-    with right:
-    st.plotly_chart(
-        tax_revenue(filtered_df),
-        use_container_width=True,
-    )
-    st.divider()
+
+st.divider()
 
 left, right = st.columns(2)
 

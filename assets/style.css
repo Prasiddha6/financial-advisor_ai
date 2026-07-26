@@ -1,0 +1,35 @@
+.stApp {
+    background-color: #f5f7fa;
+}
+
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+section[data-testid="stSidebar"] {
+    background-color: #1f2937;
+}
+
+section[data-testid="stSidebar"] * {
+    color: white;
+}
+
+div[data-testid="metric-container"] {
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid #ddd;
+}
+
+h1 {
+    font-weight: bold;
+}
+
+footer {
+    visibility: hidden;
+}
+
+#MainMenu {
+    visibility: hidden;
+}
