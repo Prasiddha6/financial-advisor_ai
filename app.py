@@ -1,78 +1,222 @@
+import streamlit as st
+import pandas as pd
+
 from utils.data_loader import DataLoader
 from utils.analytics import calculate_dataset_metrics
-import streamlit as st
+from utils.charts import (
+    revenue_trend,
+    expenditure_trend,
+    revenue_vs_expenditure,
+    top_states,
+    tax_revenue,
+    debt_trend,
+    expenditure_distribution,
+    correlation_heatmap,
+)
 
 st.set_page_config(
     page_title="Financial Analytics Dashboard",
+    page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 st.title("Financial Analytics Dashboard")
-
-st.sidebar.header("Data Source")
+st.caption("Government Finance Dataset Analysis")
 
 uploaded_file = st.sidebar.file_uploader(
-    "Upload Financial Dataset",
+    "Upload CSV Dataset",
     type=["csv"],
 )
 
-if uploaded_file is not None:
-    try:
-        # Load dataset
-        df = DataLoader.load_csv(uploaded_file)
+if uploaded_file is None:
+    st.info("Upload a CSV file to begin analysis.")
+    st.stop()
 
-        # Validate dataset
-        errors = DataLoader.validate_dataframe(df)
+try:
 
-        if errors:
-            for error in errors:
-                st.error(error)
-            st.stop()
+    df = DataLoader.load_csv(uploaded_file)
 
-        # Clean dataset
-        df = DataLoader.clean_dataframe(df)
+    errors = DataLoader.validate_dataframe(df)
 
-        # Calculate metrics
-        metrics = calculate_dataset_metrics(df)
+    if errors:
+        for error in errors:
+            st.error(error)
+        st.stop()
 
-        st.success("Dataset loaded successfully.")
+    df = DataLoader.clean_dataframe(df)
 
-        st.subheader("Dataset Preview")
-        st.dataframe(df, use_container_width=True)
+except Exception as e:
+    st.error(str(e))
+    st.stop()
 
-        st.subheader("Dataset Summary")
+st.sidebar.header("Filters")
 
-        col1, col2, col3 = st.columns(3)
+years = sorted(df["Year"].unique())
 
-        with col1:
-            st.metric("Rows", metrics["rows"])
+selected_years = st.sidebar.multiselect(
+    "Year",
+    years,
+    default=years,
+)
 
-        with col2:
-            st.metric("Columns", metrics["columns"])
+states = sorted(df["State"].unique())
 
-        with col3:
-            st.metric("Missing Values", metrics["missing_values"])
+selected_states = st.sidebar.multiselect(
+    "State",
+    states,
+    default=states,
+)
 
-        col4, col5, col6 = st.columns(3)
+filtered_df = df[
+    (df["Year"].isin(selected_years))
+    &
+    (df["State"].isin(selected_states))
+]
 
-        with col4:
-            st.metric("Numeric Columns", metrics["numeric_columns"])
+metrics = calculate_dataset_metrics(filtered_df)
 
-        with col5:
-            st.metric(
-                "Total Numeric Value",
-                f"{metrics['total_value']:,.2f}",
-            )
+total_revenue = filtered_df["Totals.Revenue"].sum()
 
-        with col6:
-            st.metric(
-                "Average Numeric Value",
-                f"{metrics['average_value']:,.2f}",
-            )
+total_expenditure = filtered_df["Totals.Expenditure"].sum()
 
-    except Exception as e:
-        st.error(f"Error loading dataset: {e}")
+total_tax = filtered_df["Totals.Tax"].sum()
 
-else:
-    st.info("Please upload a CSV file to begin analysis.")
+total_debt = filtered_df[
+    "Totals.Debt at end of fiscal year"
+].sum()
+
+balance = total_revenue - total_expenditure
+
+st.subheader("Key Performance Indicators")
+
+c1, c2, c3, c4, c5 = st.columns(5)
+
+with c1:
+    st.metric(
+        "Revenue",
+        f"{total_revenue:,.0f}",
+    )
+
+with c2:
+    st.metric(
+        "Expenditure",
+        f"{total_expenditure:,.0f}",
+    )
+
+with c3:
+    st.metric(
+        "Net Balance",
+        f"{balance:,.0f}",
+    )
+
+with c4:
+    st.metric(
+        "Tax Revenue",
+        f"{total_tax:,.0f}",
+    )
+
+with c5:
+    st.metric(
+        "Outstanding Debt",
+        f"{total_debt:,.0f}",
+    )
+
+st.divider()
+
+left, right = st.columns(2)
+
+with left:
+    st.plotly_chart(
+        revenue_trend(filtered_df),
+        use_container_width=True,
+    )
+
+with right:
+    st.plotly_chart(
+        expenditure_trend(filtered_df),
+        use_container_width=True,
+    )
+
+st.plotly_chart(
+    revenue_vs_expenditure(filtered_df),
+    use_container_width=True,
+)
+
+left, right = st.columns(2)
+
+with left:
+    st.plotly_chart(
+        top_states(filtered_df),
+        use_container_width=True,
+    )
+
+with right:
+    st.plotly_chart(
+        tax_revenue(filtered_df),
+        use_container_width=True,
+    )
+    with right:
+    st.plotly_chart(
+        tax_revenue(filtered_df),
+        use_container_width=True,
+    )
+    st.divider()
+
+left, right = st.columns(2)
+
+with left:
+    st.plotly_chart(
+        debt_trend(filtered_df),
+        use_container_width=True,
+    )
+
+with right:
+    st.plotly_chart(
+        expenditure_distribution(filtered_df),
+        use_container_width=True,
+    )
+
+st.divider()
+
+st.subheader("Correlation Analysis")
+
+st.plotly_chart(
+    correlation_heatmap(filtered_df),
+    use_container_width=True,
+)
+
+st.divider()
+
+st.subheader("Dataset Summary")
+
+summary = filtered_df.describe()
+
+st.dataframe(
+    summary,
+    use_container_width=True,
+)
+
+st.divider()
+
+st.subheader("Filtered Dataset")
+
+st.dataframe(
+    filtered_df,
+    use_container_width=True,
+)
+
+csv = filtered_df.to_csv(index=False).encode("utf-8")
+
+st.download_button(
+    label="Download Filtered Dataset",
+    data=csv,
+    file_name="filtered_financial_data.csv",
+    mime="text/csv",
+)
+
+st.divider()
+
+st.caption(
+    "Financial Analytics Dashboard | Built with Streamlit and Plotly"
+)
