@@ -1,34 +1,22 @@
-import plotly.express as px
+import pandas as pd
 
 
-def expense_pie(category_data):
+def calculate_dataset_metrics(df: pd.DataFrame) -> dict:
+    """
+    Calculate summary metrics for the uploaded dataset.
+    """
 
-    fig = px.pie(
-        values=category_data.values,
-        names=category_data.index,
-        hole=0.45
-    )
+    numeric_df = df.select_dtypes(include="number")
 
-    fig.update_layout(
-        title="Expense Distribution",
-        template="plotly_white"
-    )
+    metrics = {
+        "rows": len(df),
+        "columns": len(df.columns),
+        "missing_values": int(df.isnull().sum().sum()),
+        "numeric_columns": len(numeric_df.columns),
+        "total_value": float(numeric_df.sum().sum()),
+        "average_value": float(numeric_df.mean().mean())
+        if not numeric_df.empty
+        else 0.0,
+    }
 
-    return fig
-
-
-def expense_bar(category_data):
-
-    fig = px.bar(
-        x=category_data.index,
-        y=category_data.values
-    )
-
-    fig.update_layout(
-        title="Expenses by Category",
-        xaxis_title="Category",
-        yaxis_title="Amount",
-        template="plotly_white"
-    )
-
-    return fig
+    return metrics
