@@ -1,3 +1,5 @@
+from utils.data_loader import DataLoader
+from utils.analytics import calculate_dataset_metrics
 import streamlit as st
 import pandas as pd
 
@@ -18,7 +20,16 @@ uploaded_file = st.sidebar.file_uploader(
 
 if uploaded_file is not None:
     try:
-        df = pd.read_csv(uploaded_file)
+        df = DataLoader.load_csv(uploaded_file)
+
+errors = DataLoader.validate_dataframe(df)
+
+if errors:
+    for error in errors:
+        st.error(error)
+    st.stop()
+
+df = DataLoader.clean_dataframe(df)
 
         st.success("Dataset loaded successfully.")
 
