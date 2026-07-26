@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-
+from utils.predictor import forecast_revenue
 from utils.data_loader import DataLoader
 from utils.analytics import calculate_dataset_metrics
 from utils.charts import (
@@ -220,3 +220,19 @@ st.divider()
 st.caption(
     "Financial Analytics Dashboard | Built with Streamlit and Plotly"
 )
+st.divider()
+
+st.header("Revenue Forecast")
+
+forecast_df = forecast_revenue(filtered_df)
+
+st.dataframe(
+    forecast_df,
+    use_container_width=True,
+)
+
+forecast_chart = (
+    forecast_df.set_index("Year")
+)
+
+st.line_chart(forecast_chart)
